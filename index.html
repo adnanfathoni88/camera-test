@@ -3,33 +3,53 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Kamera Laptop</title>
+    <title>Capture Kamera</title>
+
+    <style>
+        video {
+            display: none;
+        }
+
+        canvas {
+            width: 100vw;
+            height: 100vh;
+        }
+    </style>
 </head>
 
 <body>
 
-    <video id="video" width="400" autoplay></video>
-    <br>
-    <button id="snap">Ambil Foto</button>
-    <br><br>
-    <canvas id="canvas" width="400" height="300"></canvas>
+    <button id="capture">Ambil Foto</button>
+    <canvas id="canvas"></canvas>
 
     <script>
-        const video = document.getElementById('video');
+        const video = document.createElement('video');
         const canvas = document.getElementById('canvas');
-        const snap = document.getElementById('snap');
         const ctx = canvas.getContext('2d');
+        const captureBtn = document.getElementById('capture');
 
-        navigator.mediaDevices.getUserMedia({ video: true })
-            .then(stream => {
-                video.srcObject = stream;
-            })
-            .catch(err => {
-                alert('Kamera tidak bisa diakses!');
+        captureBtn.addEventListener('click', async () => {
+            const stream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: 'environment' }
             });
 
-        snap.addEventListener('click', () => {
+            video.srcObject = stream;
+            await video.play();
+
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            // stop kamera
+            stream.getTracks().forEach(track => track.stop());
+
+            // hasil foto → base64
+            const imageBase64 = canvas.toDataURL('image/jpeg', 0.8);
+
+            console.log(imageBase64);
+
+            // TODO: kirim ke server
         });
     </script>
 
