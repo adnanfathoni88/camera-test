@@ -3,53 +3,76 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Capture Kamera</title>
+    <title>Kamera Multi Foto</title>
 
     <style>
         video {
-            display: none;
+            width: 400px;
         }
 
-        canvas {
-            width: 100vw;
-            height: 100vh;
+        .photos img {
+            width: 120px;
+            margin: 5px;
+            border: 2px solid #ccc;
         }
     </style>
 </head>
 
 <body>
 
-    <button id="capture">Ambil Foto</button>
-    <canvas id="canvas"></canvas>
+    <video id="video" autoplay></video><br>
+    <button id="snap">Ambil Foto</button>
+    <button id="upload">Upload Semua</button>
+
+    <br><br>
+    <div class="photos" id="photos"></div>
 
     <script>
-        const video = document.createElement('video');
-        const canvas = document.getElementById('canvas');
+        const video = document.getElementById('video');
+        const snap = document.getElementById('snap');
+        const uploadBtn = document.getElementById('upload');
+        const photosDiv = document.getElementById('photos');
+
+        const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
-        const captureBtn = document.getElementById('capture');
 
-        captureBtn.addEventListener('click', async () => {
-            const stream = await navigator.mediaDevices.getUserMedia({
-                video: { facingMode: 'environment' }
-            });
+        const images = []; // 🔥 tempat simpan banyak foto
 
-            video.srcObject = stream;
-            await video.play();
+        // nyalakan kamera
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then(stream => video.srcObject = stream)
+            .catch(() => alert('Kamera tidak bisa diakses'));
 
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
+        // ambil foto
+        snap.addEventListener('click', () => {
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
 
-            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            ctx.drawImage(video, 0, 0);
 
-            // stop kamera
-            stream.getTracks().forEach(track => track.stop());
+            // convert ke base64
+            const imageData = canvas.toDataURL('image/jpeg', 0.8);
 
-            // hasil foto → base64
-            const imageBase64 = canvas.toDataURL('image/jpeg', 0.8);
+            images.push(imageData); // simpan ke array
 
-            console.log(imageBase64);
+            // tampilkan thumbnail
+            const img = document.createElement('img');
+            img.src = imageData;
+            photosDiv.appendChild(img);
+        });
 
-            // TODO: kirim ke server
+        // upload ke server
+        uploadBtn.addEventListener('click', () => {
+
+            console.log(images); // cek di console
+
+            fetch('/upload', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ images })
+            })
+                .then(() => alert('Upload berhasil'))
+                .catch(() => alert('Upload gagal'));
         });
     </script>
 
