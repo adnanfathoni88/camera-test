@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Kamera Laptop</title>
+</head>
+
+<body>
+
+    <video id="video" width="400" autoplay></video>
+    <br>
+    <button id="snap">Ambil Foto</button>
+    <br><br>
+    <canvas id="canvas" width="400" height="300"></canvas>
+
+    <script>
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const snap = document.getElementById('snap');
+        const ctx = canvas.getContext('2d');
+
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then(stream => {
+                video.srcObject = stream;
+            })
+            .catch(err => {
+                alert('Kamera tidak bisa diakses!');
+            });
+
+        snap.addEventListener('click', () => {
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        });
+    </script>
+
+</body>
+
+</html>
